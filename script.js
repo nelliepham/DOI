@@ -1,9 +1,3 @@
-// ===========================================
-// KHAI BÁO BIẾN TOÀN CỤC VÀ KHỞI TẠO TRACK
-// PHẢI ĐƯỢC ĐẶT Ở ĐẦU FILE
-// ===========================================
-
-// Biến trạng thái
 let isPlaying = false;
 let isSpaceDown = false;
 let hasStarted = false;
@@ -11,33 +5,28 @@ let currentSceneIndex = 0;
 let sceneInterval;
 let fadeInterval;
 
-// Track Nhạc (Khai báo trước khi dùng)
+// Audio Tracks 
 const otherTrack = new Howl({
     src: ['music/DOI_other.mp3'],
     loop: true,
     volume: 1.0,
-    format: ['mp3'] // <--- THÊM DÒNG NÀY
+    format: ['mp3']
 });
 const vocalTrack = new Howl({
     src: ['music/DOI_vocals.mp3?v=1'],
     loop: true,
     volume: 1.0,
-    format: ['mp3'] // <--- THÊM DÒNG NÀY
+    format: ['mp3']
 });
-const timeTrack = otherTrack; // Dùng OtherTrack để theo dõi thời gian
+const timeTrack = otherTrack; // Use OtherTrack to track playback time
 
-// Lấy phần tử HTML (Sau khi khai báo các Track)
+
+// HTML Element references
 const sceneElement = document.getElementById('scene');
 const playPauseButton = document.getElementById('play-pause-button');
 const controlIcon = document.getElementById('control-icon');
 
-
-// ===========================================
-// ĐỊNH NGHĨA CÁC HÀM (FUNCTION)
-// PHẢI ĐƯỢC ĐẶT TRƯỚC LỆNH GỌI
-// ===========================================
-
-// Ánh xạ thời gian và tên file scene
+// Scene Map (Still images for now, later will be replaced with animation video)
 const sceneMap = [
     { time: 0, file: 'scene/scene1.png' },
     { time: 29, file: 'scene/scene2.png' },
@@ -48,7 +37,7 @@ const sceneMap = [
     { time: 197, file: 'scene/scene6.png' }
 ];
 
-// 1. Cập nhật Scene theo thời gian (Đã fix lỗi sắp xếp)
+// Function to update the scene based on timeline (later will be replaced with animation video)
 function updateScene() {
     const currentTime = Math.floor(timeTrack.seek() || 0);
 
@@ -64,82 +53,78 @@ function updateScene() {
     }
 }
 
-// 2. Cập nhật Âm thanh khi nhấn Spacebar
+// Function to update sound volume based on Spacebar interaction (Custom Fade)
 function updateSoundState(isHoldingSpace) {
-    // 1. Dừng Interval cũ (nếu có) để loại bỏ xung đột
+    // 1. Stop old interval to prevent conflicts
     if (fadeInterval) {
         clearInterval(fadeInterval);
     }
 
-    // Thiết lập mục tiêu và bước nhảy
-    const targetVolume = isHoldingSpace ? 0.0 : 1.0; // 0.0 là TẮT, 1.0 là BẬT
+    // Set the target and step size
+    const targetVolume = isHoldingSpace ? 0.0 : 1.0; // 0.0 is MUTE, 1.0 is FULL VOLUME
+    const step = isHoldingSpace ? -0.05 : 0.05;    // Step size for smooth transition
 
-    // Bước nhảy nhỏ và tốc độ cao hơn để mượt và nhanh chóng về 0.0
-    const step = isHoldingSpace ? -0.05 : 0.05;
+    // Ensure the background track is always at full volume
+    otherTrack.volume(1.0);
 
-    let currentVolume = vocalTrack.volume();
-
-    // Nếu âm lượng đã là mục tiêu, không cần làm gì
+    // If already at target volume, skip fade process
     if (vocalTrack.volume() === targetVolume) {
         return;
     }
 
-    // Đảm bảo nhạc cụ luôn ở 1.0 (vì nó không cần fade)
-    otherTrack.volume(1.0);
-
-    // Bắt đầu Interval mới (Custom Fade)
+    // Start the new Custom Fade Interval
     fadeInterval = setInterval(() => {
-        currentVolume = vocalTrack.volume();
+        let currentVolume = vocalTrack.volume();
         let newVolume = currentVolume + step;
 
-        // KIỂM TRA ĐIỀU KIỆN DỪNG: Khi đạt đến hoặc vượt qua mục tiêu
+        // CHECK STOP CONDITION: When target volume is reached or surpassed
         if ((step > 0 && newVolume >= targetVolume) || (step < 0 && newVolume <= targetVolume)) {
             newVolume = targetVolume;
-            clearInterval(fadeInterval); // Dừng Interval
+            clearInterval(fadeInterval); // Stop the interval
         }
 
-        // Áp dụng volume mới
+        // Apply new volume
         vocalTrack.volume(newVolume);
-    }, 15); // Cập nhật mỗi 15ms (Tạo hiệu ứng fade rất mượt và nhanh)
+    }, 15); // Update every 15ms for smooth fade effect
 }
 
 
-// 3. Hàm Khởi động Nhạc (Chỉ gọi 1 lần)
+// 3. Function to start music (Called only once)
 function startMusic() {
     if (hasStarted) return;
 
-    // Chỉ chơi OTHER TRACK ngay lập tức
+    // Only play OTHER TRACK immediately
     otherTrack.play();
 
-    // Đảm bảo Vocal được chơi sau khi nó tải xong (chỉ chạy 1 lần)
+    // Ensure Vocal is played only after it's loaded (prevents missing sound)
     vocalTrack.once('load', function () {
         vocalTrack.play();
         console.log("Vocal Loaded and Started.");
     });
 
-    // Nếu Vocal đã tải xong từ trước (sẵn sàng), thì chơi ngay
+    // Fallback: If Vocal loaded before the 'once' listener, play it immediately
     if (vocalTrack.state() === 'loaded') {
         vocalTrack.play();
     }
 
-    // Khởi động vòng lặp chuyển cảnh
+    // Start scene loop
     sceneInterval = setInterval(updateScene, 500);
 
-    // Đánh dấu đã bắt đầu
+    // Set state flags
     isPlaying = true;
     hasStarted = true;
 
-    // Hiển thị nút Play/Pause và cập nhật icon
+    // Display control buttons and hide instruction
     playPauseButton.style.display = 'flex';
     controlIcon.textContent = '❚❚';
 
     document.getElementById('instruction').style.display = 'none';
 }
 
-// 4. Hàm Play/Pause (Dùng cho nút bấm)
+// 4. Function to toggle Play/Pause
 function togglePlayPause() {
     if (isPlaying) {
-        // Dừng nhạc (Pause)
+        // State: Playing -> Pause
         otherTrack.pause();
         vocalTrack.pause();
         clearInterval(sceneInterval);
@@ -147,7 +132,7 @@ function togglePlayPause() {
         controlIcon.textContent = '▶';
         isPlaying = false;
     } else {
-        // Chơi nhạc (Resume)
+        // State: Paused -> Resume
         otherTrack.play();
         vocalTrack.play();
         sceneInterval = setInterval(updateScene, 500);
@@ -155,44 +140,41 @@ function togglePlayPause() {
         controlIcon.textContent = '❚❚';
         isPlaying = true;
 
-        // Đảm bảo trạng thái âm thanh Spacebar đang hoạt động
+        // Ensure Spacebar effect is applied if key is already held
         updateSoundState(isSpaceDown);
     }
 }
 
 
-// ===========================================
-// GÁN SỰ KIỆN VÀ KHỞI TẠO BAN ĐẦU
-// ===========================================
 
-// Xử lý sự kiện khi nhấn phím (keydown)
+// Keydown event handler (for starting and muting)
 document.addEventListener('keydown', (e) => {
     if (e.key === ' ') {
         e.preventDefault();
 
-        // 1. LOGIC KHỞI ĐỘNG (BƯỚC 1)
+        // 1. START LOGIC (RUNS ONLY ONCE)
         if (!hasStarted) {
             startMusic();
         }
 
-        // 2. LOGIC TƯƠNG TÁC (CHỈ KHI ĐANG CHƠI và Spacebar CHƯA GIỮ)
+        // 2. INTERACTION LOGIC (MUTE VOCAL)
         if (isPlaying && !isSpaceDown) {
             isSpaceDown = true;
-            updateSoundState(true); // Tắt vocal (FADE OUT)
+            updateSoundState(true); // Fade OUT (Mute Vocal)
         }
     }
 });
 
-// Xử lý sự kiện khi nhả phím (keyup)
+// Keyup event handler (for unmuting)
 document.addEventListener('keyup', (e) => {
     if (e.key === ' ' && isPlaying) {
         isSpaceDown = false;
-        updateSoundState(false); // Bật vocal (FADE IN)
+        updateSoundState(false); // Fade IN (Unmute Vocal)
     }
 });
 
-// Gán sự kiện cho nút Play/Pause
+// Attach event listener to Play/Pause button
 playPauseButton.addEventListener('click', togglePlayPause);
 
-// Cập nhật trạng thái âm thanh mặc định (Vocal ON)
+// Initialize sound state (Vocal ON by default)
 updateSoundState(false);
