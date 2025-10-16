@@ -19,7 +19,7 @@ const otherTrack = new Howl({
     format: ['mp3'] // <--- THÊM DÒNG NÀY
 });
 const vocalTrack = new Howl({
-    src: ['music/DOI_vocals.mp3'],
+    src: ['music/DOI_vocals.mp3?v=1'],
     loop: true,
     volume: 1.0,
     format: ['mp3'] // <--- THÊM DÒNG NÀY
@@ -108,9 +108,19 @@ function updateSoundState(isHoldingSpace) {
 function startMusic() {
     if (hasStarted) return;
 
-    // Bắt đầu chơi cả hai track
+    // Chỉ chơi OTHER TRACK ngay lập tức
     otherTrack.play();
-    vocalTrack.play();
+
+    // Đảm bảo Vocal được chơi sau khi nó tải xong (chỉ chạy 1 lần)
+    vocalTrack.once('load', function () {
+        vocalTrack.play();
+        console.log("Vocal Loaded and Started.");
+    });
+
+    // Nếu Vocal đã tải xong từ trước (sẵn sàng), thì chơi ngay
+    if (vocalTrack.state() === 'loaded') {
+        vocalTrack.play();
+    }
 
     // Khởi động vòng lặp chuyển cảnh
     sceneInterval = setInterval(updateScene, 500);
@@ -123,7 +133,6 @@ function startMusic() {
     playPauseButton.style.display = 'flex';
     controlIcon.textContent = '❚❚';
 
-    // ẨN INSTRUCTION (Vì nhạc đã bắt đầu)
     document.getElementById('instruction').style.display = 'none';
 }
 
