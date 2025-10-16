@@ -4,7 +4,7 @@ let hasStarted = false;
 let videoReady = false;
 let volumeInterval;
 
-const videoA = document.getElementById('videoA'); //
+const videoA = document.getElementById('videoA');
 const videoB = document.getElementById('videoB'); // Others and Sound Effects
 
 const instruction = document.getElementById('instruction');
@@ -71,38 +71,43 @@ function updateVideoState(isHoldingSpace) {
 function startMusic() {
     if (hasStarted) return;
 
-    // Đặt Volume về 0.0 trước khi Unmute (để tránh tiếng nổ đột ngột)
-    videoA.volume = 0.0;
-    videoB.volume = 0.0;
-
-    // Bỏ MUTE và Play
-    videoA.muted = false;
-    videoB.muted = false;
-
-    // Thử tăng tốc độ tải:
-    videoA.preload = 'auto';
-    videoB.preload = 'auto';
-
-    // Play video
-    videoA.play();
-    videoB.play();
-
-    // Sau khi Play, đặt lại Volume ban đầu và ẩn màn hình chờ
-    videoA.volume = 1.0;
-    videoB.volume = 0.0;
-
+    // 1. Ẩn Splash Screen
     splashScreen.style.opacity = 0;
     setTimeout(() => { splashScreen.style.display = 'none'; }, 500);
 
-    videoB.currentTime = videoA.currentTime;
+    // // 2. KHỞI TẠO VIDEO (Quan trọng: Đặt volume/muted trước Play)
+    videoA.muted = false;
+    videoB.muted = false;
 
+    // Bắt đầu Playback
+    let playPromiseA = videoA.play();
+    let playPromiseB = videoB.play();
+
+    // Thêm logic xử lý Promise để đảm bảo Playback thành công
+    if (playPromiseA !== undefined && playPromiseB !== undefined) {
+        Promise.all([playPromiseA, playPromiseB])
+            .then(() => {
+                videoB.currentTime = videoA.currentTime; // Đồng bộ
+
+                // GỌI HÀM UPDATE VIDEO STATE ĐỂ ĐẶT VOLUME MƯỢT MÀ
+                updateVideoState(false);
+            })
+            .catch(error => {
+                console.error("Video Playback Failed:", error);
+                // Tạm thời bật tiếng video để kiểm tra
+                videoA.muted = true;
+                videoB.muted = true;
+                alert("Error! Vui lòng xuất lại video.");
+            });
+    }
+
+    // Cập nhật trạng thái
     isPlaying = true;
     hasStarted = true;
 
+    // ... (logic hiển thị UI giữ nguyên) ...
     playPauseButton.style.display = 'flex';
     controlIcon.textContent = '❚❚';
-
-
 }
 
 // 4. Function to toggle Play/Pause
