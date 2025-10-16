@@ -12,7 +12,7 @@ let sceneInterval;
 
 // Track Nhạc (Khai báo trước khi dùng)
 const otherTrack = new Howl({
-    src: ['music/DOI_other.mpm3'],
+    src: ['music/DOI_other.mp3'],
     loop: true,
     volume: 1.0,
 });
