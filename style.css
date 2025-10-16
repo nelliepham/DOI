@@ -52,6 +52,7 @@ html {
 #videoA,
 #videoB {
     transition: opacity 0.15s ease-in-out;
+
 }
 
 #instruction {
@@ -72,15 +73,14 @@ html {
     border-radius: 0;
 }
 
-
-
 #play-pause-button {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
+    top: 20px;
+    right: 20px;
 
     width: 40px;
     height: 40px;
+
 
     background-color: transparent;
     border: none;
@@ -103,4 +103,5 @@ html {
     color: white;
     text-shadow: 0 0 5px black;
     transform: none;
+    line-height: 1;
 }
