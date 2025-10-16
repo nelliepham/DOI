@@ -17,7 +17,7 @@ const otherTrack = new Howl({
     volume: 1.0,
 });
 const vocalTrack = new Howl({
-    src: ['music/DOI_vocals.mp3'],
+    src: ['music/DOI_vocals.mp3'], // Sửa lại tên này cho khớp
     loop: true,
     volume: 1.0,
 });
