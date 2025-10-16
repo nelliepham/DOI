@@ -10,16 +10,27 @@ const instruction = document.getElementById('instruction');
 const playPauseButton = document.getElementById('play-pause-button');
 const controlIcon = document.getElementById('control-icon');
 
+const splashScreen = document.getElementById('splash-screen');
+
+
 // Function to update sound volume based on Spacebar interaction (Custom Fade)
 function updateVideoState(isHoldingSpace) {
     if (isHoldingSpace) {
-        // GIỮ: Hiện Clip B (Vocal OFF)
-        videoA.style.opacity = 0; // Ẩn A
-        videoB.style.opacity = 1; // Hiện B
+
+        videoA.style.opacity = 0;
+        videoB.style.opacity = 1;
+
+
+        videoA.muted = true;
+        videoB.muted = false;
+
     } else {
-        // NHẢ: Hiện Clip A (Vocal ON)
-        videoA.style.opacity = 1; // Hiện A
-        videoB.style.opacity = 0; // Ẩn B
+
+        videoA.style.opacity = 1;
+        videoB.style.opacity = 0;
+
+        videoA.muted = false;
+        videoB.muted = true;
     }
 }
 
@@ -28,37 +39,38 @@ function updateVideoState(isHoldingSpace) {
 function startMusic() {
     if (hasStarted) return;
 
-    // Bỏ MUTED và Play video
-    videoA.muted = false;
-    videoB.muted = false;
+    splashScreen.style.opacity = 0;
+    setTimeout(() => { splashScreen.style.display = 'none'; }, 500);
 
-    // Cần gọi Play() vì Autoplay thường bị chặn cho đến khi user tương tác
+
+    videoA.muted = false;
+    videoB.muted = true;
+
     videoA.play();
     videoB.play();
 
-    // Đồng bộ video B theo video A (đảm bảo chúng chạy cùng mốc)
+
     videoB.currentTime = videoA.currentTime;
 
-    // Thiết lập trạng thái
+
     isPlaying = true;
     hasStarted = true;
 
-    // Hiển thị nút controls và ẩn instruction
+
     playPauseButton.style.display = 'flex';
     controlIcon.textContent = '❚❚';
-    instruction.style.display = 'none';
 }
 
 // 4. Function to toggle Play/Pause
 function togglePlayPause() {
     if (videoA.paused) {
-        // Nếu đang DỪNG -> Tiếp tục
+
         videoA.play();
         videoB.play();
         controlIcon.textContent = '❚❚';
         isPlaying = true;
     } else {
-        // Nếu đang CHƠI -> Dừng
+
         videoA.pause();
         videoB.pause();
         controlIcon.textContent = '▶';
@@ -88,7 +100,7 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('keyup', (e) => {
     if (e.key === ' ') {
         isSpaceDown = false;
-        updateVideoState(false); // Hiện Clip A (Vocal ON)
+        updateVideoState(false);
     }
 });
 
