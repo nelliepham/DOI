@@ -1,3 +1,40 @@
+body,
+html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+#videoA,
+#videoB {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+
+    min-width: 100%;
+    min-height: 100%;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+}
+
+
+#videoA {
+    opacity: 1;
+    z-index: 10;
+}
+
+#videoB {
+    opacity: 0;
+    z-index: 9;
+}
+
+#videoA,
+#videoB {
+    transition: opacity 0.15s ease-in-out;
+    /* 150ms để chuyển mượt */
+}
+
 #instruction {
     position: fixed;
     bottom: 20px;
@@ -16,19 +53,7 @@
     border-radius: 0;
 }
 
-/* Scene Demo for now, later will be changed into animation video */
-#scene {
-    width: 100vw;
-    height: 100vh;
-    background-image: url('scene/scene1.png');
-    /* Đường dẫn đúng */
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background-image 0.5s;
-}
+
 
 #play-pause-button {
     position: fixed;

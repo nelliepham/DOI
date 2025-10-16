@@ -4,20 +4,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prototype MV ĐỢI - 52Hz</title>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+  <title>Interactive MV Prototype - ĐỢI 52Hz</title>
 
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <div id="scene">
-    <div id="instruction">
-      Press and hold SPACEBAR to start
-    </div>
 
+  <video id="videoA" src="DOI_A.mp4" loop autoplay muted></video>
+
+  <video id="videoB" src="DOI_B.mp4" loop muted></video>
+
+  <div id="instruction">
+    Press and hold SPACEBAR to start
   </div>
+
   <div id="play-pause-button">
     <span id="control-icon">▶</span>
   </div>

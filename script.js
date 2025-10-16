@@ -1,91 +1,26 @@
 let isPlaying = false;
 let isSpaceDown = false;
 let hasStarted = false;
-let currentSceneIndex = 0;
-let sceneInterval;
-let fadeInterval;
+let videoReady = false; // Biến kiểm tra video đã load chưa
 
-// Audio Tracks 
-const otherTrack = new Howl({
-    src: ['music/DOI_other.mp3'],
-    loop: true,
-    volume: 1.0,
-    format: ['mp3']
-});
-const vocalTrack = new Howl({
-    src: ['music/DOI_vocals.mp3?v=1'],
-    loop: true,
-    volume: 1.0,
-    format: ['mp3']
-});
-const timeTrack = otherTrack; // Use OtherTrack to track playback time
+const videoA = document.getElementById('videoA'); // Video Gốc (Vocal ON)
+const videoB = document.getElementById('videoB'); // Video Tương tác (Vocal OFF)
 
-
-// HTML Element references
-const sceneElement = document.getElementById('scene');
+const instruction = document.getElementById('instruction');
 const playPauseButton = document.getElementById('play-pause-button');
 const controlIcon = document.getElementById('control-icon');
 
-// Scene Map (Still images for now, later will be replaced with animation video)
-const sceneMap = [
-    { time: 0, file: 'scene/scene1.png' },
-    { time: 29, file: 'scene/scene2.png' },
-    { time: 39, file: 'scene/scene3.png' },
-    { time: 51, file: 'scene/scene4.png' },
-    { time: 61, file: 'scene/scene5.png' },
-    { time: 71, file: 'scene/scene6.png' },
-    { time: 197, file: 'scene/scene6.png' }
-];
-
-// Function to update the scene based on timeline (later will be replaced with animation video)
-function updateScene() {
-    const currentTime = Math.floor(timeTrack.seek() || 0);
-
-    for (let i = currentSceneIndex + 1; i < sceneMap.length; i++) {
-        if (currentTime >= sceneMap[i].time) {
-            currentSceneIndex = i;
-            const nextSceneFile = sceneMap[currentSceneIndex].file;
-            sceneElement.style.backgroundImage = `url('${nextSceneFile}')`;
-            console.log(`Scene changed to: ${nextSceneFile} at ${currentTime}s`);
-        } else {
-            break;
-        }
-    }
-}
-
 // Function to update sound volume based on Spacebar interaction (Custom Fade)
-function updateSoundState(isHoldingSpace) {
-    // 1. Stop old interval to prevent conflicts
-    if (fadeInterval) {
-        clearInterval(fadeInterval);
+function updateVideoState(isHoldingSpace) {
+    if (isHoldingSpace) {
+        // GIỮ: Hiện Clip B (Vocal OFF)
+        videoA.style.opacity = 0; // Ẩn A
+        videoB.style.opacity = 1; // Hiện B
+    } else {
+        // NHẢ: Hiện Clip A (Vocal ON)
+        videoA.style.opacity = 1; // Hiện A
+        videoB.style.opacity = 0; // Ẩn B
     }
-
-    // Set the target and step size
-    const targetVolume = isHoldingSpace ? 0.0 : 1.0; // 0.0 is MUTE, 1.0 is FULL VOLUME
-    const step = isHoldingSpace ? -0.05 : 0.05;    // Step size for smooth transition
-
-    // Ensure the background track is always at full volume
-    otherTrack.volume(1.0);
-
-    // If already at target volume, skip fade process
-    if (vocalTrack.volume() === targetVolume) {
-        return;
-    }
-
-    // Start the new Custom Fade Interval
-    fadeInterval = setInterval(() => {
-        let currentVolume = vocalTrack.volume();
-        let newVolume = currentVolume + step;
-
-        // CHECK STOP CONDITION: When target volume is reached or surpassed
-        if ((step > 0 && newVolume >= targetVolume) || (step < 0 && newVolume <= targetVolume)) {
-            newVolume = targetVolume;
-            clearInterval(fadeInterval); // Stop the interval
-        }
-
-        // Apply new volume
-        vocalTrack.volume(newVolume);
-    }, 15); // Update every 15ms for smooth fade effect
 }
 
 
@@ -93,83 +28,67 @@ function updateSoundState(isHoldingSpace) {
 function startMusic() {
     if (hasStarted) return;
 
-    // Only play OTHER TRACK immediately
-    otherTrack.play();
+    // Bỏ MUTED và Play video
+    videoA.muted = false;
+    videoB.muted = false;
 
-    // Ensure Vocal is played only after it's loaded (prevents missing sound)
-    vocalTrack.once('load', function () {
-        vocalTrack.play();
-        console.log("Vocal Loaded and Started.");
-    });
+    // Cần gọi Play() vì Autoplay thường bị chặn cho đến khi user tương tác
+    videoA.play();
+    videoB.play();
 
-    // Fallback: If Vocal loaded before the 'once' listener, play it immediately
-    if (vocalTrack.state() === 'loaded') {
-        vocalTrack.play();
-    }
+    // Đồng bộ video B theo video A (đảm bảo chúng chạy cùng mốc)
+    videoB.currentTime = videoA.currentTime;
 
-    // Start scene loop
-    sceneInterval = setInterval(updateScene, 500);
-
-    // Set state flags
+    // Thiết lập trạng thái
     isPlaying = true;
     hasStarted = true;
 
-    // Display control buttons and hide instruction
+    // Hiển thị nút controls và ẩn instruction
     playPauseButton.style.display = 'flex';
     controlIcon.textContent = '❚❚';
-
-    document.getElementById('instruction').style.display = 'none';
+    instruction.style.display = 'none';
 }
 
 // 4. Function to toggle Play/Pause
 function togglePlayPause() {
-    if (isPlaying) {
-        // State: Playing -> Pause
-        otherTrack.pause();
-        vocalTrack.pause();
-        clearInterval(sceneInterval);
-
-        controlIcon.textContent = '▶';
-        isPlaying = false;
-    } else {
-        // State: Paused -> Resume
-        otherTrack.play();
-        vocalTrack.play();
-        sceneInterval = setInterval(updateScene, 500);
-
+    if (videoA.paused) {
+        // Nếu đang DỪNG -> Tiếp tục
+        videoA.play();
+        videoB.play();
         controlIcon.textContent = '❚❚';
         isPlaying = true;
-
-        // Ensure Spacebar effect is applied if key is already held
-        updateSoundState(isSpaceDown);
+    } else {
+        // Nếu đang CHƠI -> Dừng
+        videoA.pause();
+        videoB.pause();
+        controlIcon.textContent = '▶';
+        isPlaying = false;
     }
 }
 
 
 
-// Keydown event handler (for starting and muting)
+// Keydown event handler (for starting and muting) 
 document.addEventListener('keydown', (e) => {
     if (e.key === ' ') {
         e.preventDefault();
 
-        // 1. START LOGIC (RUNS ONLY ONCE)
         if (!hasStarted) {
             startMusic();
         }
 
-        // 2. INTERACTION LOGIC (MUTE VOCAL)
-        if (isPlaying && !isSpaceDown) {
+        if (!isSpaceDown) {
             isSpaceDown = true;
-            updateSoundState(true); // Fade OUT (Mute Vocal)
+            updateVideoState(true);
         }
     }
 });
 
-// Keyup event handler (for unmuting)
+
 document.addEventListener('keyup', (e) => {
-    if (e.key === ' ' && isPlaying) {
+    if (e.key === ' ') {
         isSpaceDown = false;
-        updateSoundState(false); // Fade IN (Unmute Vocal)
+        updateVideoState(false); // Hiện Clip A (Vocal ON)
     }
 });
 
@@ -177,4 +96,4 @@ document.addEventListener('keyup', (e) => {
 playPauseButton.addEventListener('click', togglePlayPause);
 
 // Initialize sound state (Vocal ON by default)
-updateSoundState(false);
+updateVideoState(false);
