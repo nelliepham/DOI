@@ -67,16 +67,14 @@ function updateSoundState(isHoldingSpace) {
 
     if (isHoldingSpace) {
         // TRẠNG THÁI SPACEBAR GIỮ: FADE Vocal XUỐNG 0.0
-        // Vocal fade out mượt mà trong 100ms
+        // Nhạc cụ (otherTrack) VẪN Ở 1.0
         vocalTrack.fade(vocalTrack.volume(), 0.0, fadeDuration);
         otherTrack.volume(1.0);
-        console.log("Spacebar HELD: Vocal FADE OUT (100ms)");
     } else {
-        // TRẠNG THÁI MẶC ĐỊNH (SPACEBAR NHẢ): FADE Vocal LÊN 1.0
-        // Vocal fade in mượt mà trong 100ms
+        // TRẠNG THÁI MẶC ĐỊNH: FADE Vocal LÊN 1.0
+        // Nhạc cụ (otherTrack) VẪN Ở 1.0
         vocalTrack.fade(vocalTrack.volume(), 1.0, fadeDuration);
         otherTrack.volume(1.0);
-        console.log("Spacebar RELEASED: Vocal FADE IN (100ms)");
     }
 }
 
@@ -95,14 +93,12 @@ function startMusic() {
     isPlaying = true;
     hasStarted = true;
 
-    // Hiển thị nút Play/Pause và cập nhật icon (đã Play)
+    // Hiển thị nút Play/Pause và cập nhật icon
     playPauseButton.style.display = 'flex';
     controlIcon.textContent = '❚❚';
 
     // ẨN INSTRUCTION (Vì nhạc đã bắt đầu)
     document.getElementById('instruction').style.display = 'none';
-
-    console.log("Music STARTED by Spacebar.");
 }
 
 // 4. Hàm Play/Pause (Dùng cho nút bấm)
@@ -115,7 +111,6 @@ function togglePlayPause() {
 
         controlIcon.textContent = '▶';
         isPlaying = false;
-        console.log("Music paused.");
     } else {
         // Chơi nhạc (Resume)
         otherTrack.play();
@@ -124,7 +119,6 @@ function togglePlayPause() {
 
         controlIcon.textContent = '❚❚';
         isPlaying = true;
-        console.log("Music playing (Resumed).");
 
         // Đảm bảo trạng thái âm thanh Spacebar đang hoạt động
         updateSoundState(isSpaceDown);
@@ -138,11 +132,10 @@ function togglePlayPause() {
 
 // Xử lý sự kiện khi nhấn phím (keydown)
 document.addEventListener('keydown', (e) => {
-    // Chúng ta dùng e.key === ' ' (Space) thay vì keyCode để chuẩn hơn
     if (e.key === ' ') {
         e.preventDefault();
 
-        // 1. LUÔN LUÔN GỌI HÀM START ĐẦU TIÊN
+        // 1. LOGIC KHỞI ĐỘNG (BƯỚC 1)
         if (!hasStarted) {
             startMusic();
         }
@@ -150,7 +143,7 @@ document.addEventListener('keydown', (e) => {
         // 2. LOGIC TƯƠNG TÁC (CHỈ KHI ĐANG CHƠI và Spacebar CHƯA GIỮ)
         if (isPlaying && !isSpaceDown) {
             isSpaceDown = true;
-            updateSoundState(true); // Tắt vocal
+            updateSoundState(true); // Tắt vocal (FADE OUT)
         }
     }
 });
@@ -159,7 +152,7 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('keyup', (e) => {
     if (e.key === ' ' && isPlaying) {
         isSpaceDown = false;
-        updateSoundState(false); // Bật vocal
+        updateSoundState(false); // Bật vocal (FADE IN)
     }
 });
 
