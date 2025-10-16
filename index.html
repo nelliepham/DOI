@@ -11,8 +11,14 @@
 
 <body>
 
-  <video id="videoA" src="DOI_A.mp4" loop autoplay muted></video>
-  <video id="videoB" src="DOI_B.mp4" loop autoplay muted></video>
+  <video id="videoA" loop playsinline muted>
+    <source src="DOI_A.mp4?v=5" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <video id="videoB" loop playsinline muted>
+    <source src="DOI_B.mp4?v=5" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
 
   <div id="splash-screen">
     <div id="instruction">

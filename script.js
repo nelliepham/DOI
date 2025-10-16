@@ -71,23 +71,28 @@ function updateVideoState(isHoldingSpace) {
 function startMusic() {
     if (hasStarted) return;
 
-    // 1. Fade out
-    splashScreen.style.opacity = 0;
-    setTimeout(() => {
-        splashScreen.style.display = 'none';
+    // Đặt Volume về 0.0 trước khi Unmute (để tránh tiếng nổ đột ngột)
+    videoA.volume = 0.0;
+    videoB.volume = 0.0;
 
-    }, 500);
-
-    // 2. Remove MUTE
+    // Bỏ MUTE và Play
     videoA.muted = false;
     videoB.muted = false;
 
+    // Thử tăng tốc độ tải:
+    videoA.preload = 'auto';
+    videoB.preload = 'auto';
+
+    // Play video
+    videoA.play();
+    videoB.play();
+
+    // Sau khi Play, đặt lại Volume ban đầu và ẩn màn hình chờ
     videoA.volume = 1.0;
     videoB.volume = 0.0;
 
-    // 3. Play video
-    videoA.play();
-    videoB.play();
+    splashScreen.style.opacity = 0;
+    setTimeout(() => { splashScreen.style.display = 'none'; }, 500);
 
     videoB.currentTime = videoA.currentTime;
 
