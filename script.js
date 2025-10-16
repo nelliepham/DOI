@@ -9,17 +9,20 @@ let isSpaceDown = false;
 let hasStarted = false;
 let currentSceneIndex = 0;
 let sceneInterval;
+let fadeInterval;
 
 // Track Nhạc (Khai báo trước khi dùng)
 const otherTrack = new Howl({
     src: ['music/DOI_other.mp3'],
     loop: true,
     volume: 1.0,
+    format: ['mp3'] // <--- THÊM DÒNG NÀY
 });
 const vocalTrack = new Howl({
-    src: ['music/DOI_vocals.mp3'], // Sửa lại tên này cho khớp
+    src: ['music/DOI_vocals.mp3'],
     loop: true,
     volume: 1.0,
+    format: ['mp3'] // <--- THÊM DÒNG NÀY
 });
 const timeTrack = otherTrack; // Dùng OtherTrack để theo dõi thời gian
 
@@ -63,20 +66,43 @@ function updateScene() {
 
 // 2. Cập nhật Âm thanh khi nhấn Spacebar
 function updateSoundState(isHoldingSpace) {
-    const fadeDuration = 100; // 0.1 giây để tạo độ mượt
-
-    if (isHoldingSpace) {
-        // TRẠNG THÁI SPACEBAR GIỮ: FADE Vocal XUỐNG 0.0
-        // Nhạc cụ (otherTrack) VẪN Ở 1.0
-        vocalTrack.fade(vocalTrack.volume(), 0.0, fadeDuration);
-        otherTrack.volume(1.0);
-    } else {
-        // TRẠNG THÁI MẶC ĐỊNH: FADE Vocal LÊN 1.0
-        // Nhạc cụ (otherTrack) VẪN Ở 1.0
-        vocalTrack.fade(vocalTrack.volume(), 1.0, fadeDuration);
-        otherTrack.volume(1.0);
+    // 1. Dừng Interval cũ (nếu có) để loại bỏ xung đột
+    if (fadeInterval) {
+        clearInterval(fadeInterval);
     }
+
+    // Thiết lập mục tiêu và bước nhảy
+    const targetVolume = isHoldingSpace ? 0.0 : 1.0; // 0.0 là TẮT, 1.0 là BẬT
+
+    // Bước nhảy nhỏ và tốc độ cao hơn để mượt và nhanh chóng về 0.0
+    const step = isHoldingSpace ? -0.05 : 0.05;
+
+    let currentVolume = vocalTrack.volume();
+
+    // Nếu âm lượng đã là mục tiêu, không cần làm gì
+    if (vocalTrack.volume() === targetVolume) {
+        return;
+    }
+
+    // Đảm bảo nhạc cụ luôn ở 1.0 (vì nó không cần fade)
+    otherTrack.volume(1.0);
+
+    // Bắt đầu Interval mới (Custom Fade)
+    fadeInterval = setInterval(() => {
+        currentVolume = vocalTrack.volume();
+        let newVolume = currentVolume + step;
+
+        // KIỂM TRA ĐIỀU KIỆN DỪNG: Khi đạt đến hoặc vượt qua mục tiêu
+        if ((step > 0 && newVolume >= targetVolume) || (step < 0 && newVolume <= targetVolume)) {
+            newVolume = targetVolume;
+            clearInterval(fadeInterval); // Dừng Interval
+        }
+
+        // Áp dụng volume mới
+        vocalTrack.volume(newVolume);
+    }, 15); // Cập nhật mỗi 15ms (Tạo hiệu ứng fade rất mượt và nhanh)
 }
+
 
 // 3. Hàm Khởi động Nhạc (Chỉ gọi 1 lần)
 function startMusic() {
