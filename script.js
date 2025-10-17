@@ -21,12 +21,13 @@ function updateVideoState(isHoldingSpace) {
         clearInterval(volumeInterval);
     }
 
-    const targetA = isHoldingSpace ? 0.0 : 1.0; // Video A (Vocal) fade out
-    const targetB = isHoldingSpace ? 1.0 : 0.0; // Video B (SFX) fade in
+    const targetA = isHoldingSpace ? 0.0 : 1.0; // Volume A: 1 -> 0
+    const targetB = isHoldingSpace ? 1.0 : 0.0; // Volume B: 0 -> 1
 
     const step = 0.05;
-    const intervalTime = 20; // 20ms (fade effect)
+    const intervalTime = 15; // 15ms (để mượt)
 
+    // 1. CHUYỂN ĐỔI HÌNH ẢNH (opacity)
     if (isHoldingSpace) {
         videoA.style.opacity = 0;
         videoB.style.opacity = 1;
@@ -35,7 +36,7 @@ function updateVideoState(isHoldingSpace) {
         videoB.style.opacity = 0;
     }
 
-    // Custom Fade
+    // 2. CUSTOM FADE (Volume)
     volumeInterval = setInterval(() => {
         let currentVolA = videoA.volume;
         let currentVolB = videoB.volume;
@@ -43,14 +44,14 @@ function updateVideoState(isHoldingSpace) {
         let newVolA = currentVolA + (isHoldingSpace ? -step : step);
         let newVolB = currentVolB + (isHoldingSpace ? step : -step);
 
-        // Video A
+        // Giới hạn và áp dụng Volume A
         if ((isHoldingSpace && newVolA <= targetA) || (!isHoldingSpace && newVolA >= targetA)) {
             videoA.volume = targetA;
         } else {
             videoA.volume = newVolA;
         }
 
-        // Video B
+        // Giới hạn và áp dụng Volume B
         if ((isHoldingSpace && newVolB >= targetB) || (!isHoldingSpace && newVolB <= targetB)) {
             videoB.volume = targetB;
         } else {
@@ -62,8 +63,7 @@ function updateVideoState(isHoldingSpace) {
         }
     }, intervalTime);
 
-    videoA.muted = false;
-    videoB.muted = false;
+    // *QUAN TRỌNG: KHÔNG CHẠM VÀO PLAY/PAUSE Ở ĐÂY*
 }
 
 
@@ -79,7 +79,7 @@ function startMusic() {
     videoA.muted = false;
     videoB.muted = false;
 
-    // Bắt đầu Playback
+    // BẮT BUỘC: Cả hai video phải Play 
     let playPromiseA = videoA.play();
     let playPromiseB = videoB.play();
 
@@ -88,15 +88,13 @@ function startMusic() {
             .then(() => {
                 // ĐỒNG BỘ: Sửa lỗi Video bị loạn khi khởi động
                 videoB.currentTime = videoA.currentTime;
-                videoB.pause(); // Dừng B để chỉ A chạy
-
-                // Đặt Volume ban đầu (A=1.0, B=0.0)
-                videoA.volume = 1.0;
-                videoB.volume = 0.0;
 
                 // Cập nhật trạng thái
                 isPlaying = true;
                 hasStarted = true;
+
+                // Đặt Volume và Opacity ban đầu (A: ON, B: OFF)
+                updateVideoState(false);
 
                 // Cập nhật UI
                 playPauseButton.style.display = 'flex';
@@ -106,17 +104,7 @@ function startMusic() {
                 console.error("Video Playback Failed:", error);
                 alert("Lỗi: Video không tương thích! Vui lòng kiểm tra lại cấu hình export.");
             });
-    } else {
-
-        videoA.volume = 1.0;
-        videoB.volume = 0.0;
-        videoA.play();
-        videoB.pause();
-        videoB.currentTime = videoA.currentTime;
-        isPlaying = true;
-        hasStarted = true;
     }
-
     // 4. UI
     playPauseButton.style.display = 'flex';
     controlIcon.textContent = '❚❚';
