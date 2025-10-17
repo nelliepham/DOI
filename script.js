@@ -75,32 +75,36 @@ function startMusic() {
     splashScreen.style.opacity = 0;
     setTimeout(() => { splashScreen.style.display = 'none'; }, 500);
 
-    // 2. Bắt đầu Playback cho cả hai video (để đảm bảo chúng được tải)
+    // 2. KHỞI TẠO VIDEO
     videoA.muted = false;
     videoB.muted = false;
 
+    // Bắt đầu Playback
     let playPromiseA = videoA.play();
     let playPromiseB = videoB.play();
 
     if (playPromiseA !== undefined && playPromiseB !== undefined) {
         Promise.all([playPromiseA, playPromiseB])
             .then(() => {
-
-                videoB.pause();
-
+                // ĐỒNG BỘ: Sửa lỗi Video bị loạn khi khởi động
                 videoB.currentTime = videoA.currentTime;
+                videoB.pause(); // Dừng B để chỉ A chạy
 
+                // Đặt Volume ban đầu (A=1.0, B=0.0)
                 videoA.volume = 1.0;
                 videoB.volume = 0.0;
-                videoA.style.opacity = 1;
-                videoB.style.opacity = 0;
 
+                // Cập nhật trạng thái
                 isPlaying = true;
                 hasStarted = true;
+
+                // Cập nhật UI
+                playPauseButton.style.display = 'flex';
+                controlIcon.textContent = '❚❚';
             })
             .catch(error => {
                 console.error("Video Playback Failed:", error);
-
+                alert("Lỗi: Video không tương thích! Vui lòng kiểm tra lại cấu hình export.");
             });
     } else {
 
