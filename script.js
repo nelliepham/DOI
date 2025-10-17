@@ -75,37 +75,45 @@ function startMusic() {
     splashScreen.style.opacity = 0;
     setTimeout(() => { splashScreen.style.display = 'none'; }, 500);
 
-    // // 2. KHỞI TẠO VIDEO (Quan trọng: Đặt volume/muted trước Play)
+    // 2. Bắt đầu Playback cho cả hai video (để đảm bảo chúng được tải)
     videoA.muted = false;
     videoB.muted = false;
 
-    // Bắt đầu Playback
     let playPromiseA = videoA.play();
     let playPromiseB = videoB.play();
 
-    // Thêm logic xử lý Promise để đảm bảo Playback thành công
     if (playPromiseA !== undefined && playPromiseB !== undefined) {
         Promise.all([playPromiseA, playPromiseB])
             .then(() => {
-                videoB.currentTime = videoA.currentTime; // Đồng bộ
 
-                // GỌI HÀM UPDATE VIDEO STATE ĐỂ ĐẶT VOLUME MƯỢT MÀ
-                updateVideoState(false);
+                videoB.pause();
+
+                videoB.currentTime = videoA.currentTime;
+
+                videoA.volume = 1.0;
+                videoB.volume = 0.0;
+                videoA.style.opacity = 1;
+                videoB.style.opacity = 0;
+
+                isPlaying = true;
+                hasStarted = true;
             })
             .catch(error => {
                 console.error("Video Playback Failed:", error);
-                // Tạm thời bật tiếng video để kiểm tra
-                videoA.muted = true;
-                videoB.muted = true;
-                alert("Error! Vui lòng xuất lại video.");
+
             });
+    } else {
+
+        videoA.volume = 1.0;
+        videoB.volume = 0.0;
+        videoA.play();
+        videoB.pause();
+        videoB.currentTime = videoA.currentTime;
+        isPlaying = true;
+        hasStarted = true;
     }
 
-    // Cập nhật trạng thái
-    isPlaying = true;
-    hasStarted = true;
-
-    // ... (logic hiển thị UI giữ nguyên) ...
+    // 4. UI
     playPauseButton.style.display = 'flex';
     controlIcon.textContent = '❚❚';
 }
